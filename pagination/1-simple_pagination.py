@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""1-async_comprehension.py"""
-
-from typing import List
-from typing import Tuple
+"""Module to calculate start and end indices for pagination."""
 import csv
+import math
+from typing import List
 
 
-def index_range(page: int, page_size: int) -> Tuple[int, int]:
-    """Returns a tuple of size two."""
-    start_index = (page - 1) * page_size
-    end_index = start_index + page_size
-    return (start_index, end_index)
+def index_range(page: int, page_size: int) -> tuple:
+    """Returns a tuple containing the start\
+        and end indices for pagination."""
+    first_index = (page - 1) * page_size
+    last_index = first_index + page_size
+    return first_index, last_index
 
 
 class Server:
@@ -33,14 +33,15 @@ class Server:
         return self.__dataset
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        """Get page of dataset"""
+        """Returns a list of rows from the dataset\
+            for the specified page and page size."""
         assert isinstance(page, int) and page > 0
         assert isinstance(page_size, int) and page_size > 0
 
-        dataset = self.dataset()
         start_index, end_index = index_range(page, page_size)
+        data = self.dataset()
 
-        if start_index >= len(dataset):
+        if start_index >= len(data):
             return []
 
-        return dataset[start_index:end_index]
+        return data[start_index:end_index]
