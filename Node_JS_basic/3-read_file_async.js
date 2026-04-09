@@ -2,47 +2,42 @@ const fs = require('fs');
 
 function countStudents(path) {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf8', (err, data) => {
+    fs.readFile(path, 'utf-8', (err, data) => {
       if (err) {
-        reject(Error('Cannot load the database'));
+        reject(new Error('Cannot load the database'));
         return;
       }
-      const response = [];
-      let msg;
 
-      const content = data.toString().split('\n');
+      const lines = data
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
 
-      let students = content.filter((item) => item);
+      // شيل الهيدر
+      lines.shift();
 
-      students = students.map((item) => item.split(','));
+      const fieldMap = {};
 
-      const NUMBER_OF_STUDENTS = students.length ? students.length - 1 : 0;
-      msg = `Number of students: ${NUMBER_OF_STUDENTS}`;
-      console.log(msg);
+      for (const line of lines) {
+        const parts = line.split(',');
+        const firstName = parts[0];
+        const field = parts[3];
 
-      response.push(msg);
-
-      const fields = {};
-      for (const i in students) {
-        if (i !== 0) {
-          if (!fields[students[i][3]]) fields[students[i][3]] = [];
-
-          fields[students[i][3]].push(students[i][0]);
+        if (!fieldMap[field]) {
+          fieldMap[field] = [];
         }
+        fieldMap[field].push(firstName);
       }
 
-      delete fields.field;
+      console.log(`Number of students: ${lines.length}`);
 
-      for (const key of Object.keys(fields)) {
-        msg = `Number of students in ${key}: ${
-          fields[key].length
-        }. List: ${fields[key].join(', ')}`;
-
-        console.log(msg);
-
-        response.push(msg);
+      for (const [field, students] of Object.entries(fieldMap)) {
+        console.log(
+          `Number of students in ${field}: ${students.length}. List: ${students.join(', ')}`,
+        );
       }
-      resolve(response);
+
+      resolve();
     });
   });
 }
