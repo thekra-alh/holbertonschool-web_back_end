@@ -1,7 +1,7 @@
 #!/usr/bin/node
 
 // Display welcome message
-console.log('Welcome to Holberton School, what is your name?');
+process.stdout.write('Welcome to Holberton School, what is your name?\n');
 
 // Set encoding
 process.stdin.setEncoding('utf8');
@@ -10,21 +10,12 @@ process.stdin.setEncoding('utf8');
 process.stdin.on('readable', () => {
   const chunk = process.stdin.read();
   if (chunk !== null) {
-    // Remove trailing newline but preserve the input
-    const name = chunk.replace(/\n$/, '');
-    console.log(`Your name is: ${name}`);
-    
-    // If stdin is not a TTY (piped), exit after showing name
-    if (!process.stdin.isTTY) {
-      console.log('This important software is now closing');
-      process.exit();
-    }
+    const name = chunk.trim();
+    process.stdout.write(`Your name is: ${name}\n`);
   }
 });
 
-// Handle end of input (Ctrl+D in interactive mode)
+// Handle end of input - only for piped/non-interactive mode
 process.stdin.on('end', () => {
-  if (process.stdin.isTTY) {
-    console.log('This important software is now closing');
-  }
+  process.stdout.write('This important software is now closing\n');
 });
