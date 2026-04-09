@@ -1,69 +1,59 @@
 const express = require('express');
 const fs = require('fs');
 
-const countStudents = (path) => new Promise((resolve, reject) => {
-  fs.readFile(path, 'utf8', (err, data) => {
-    if (err) {
-      reject(new Error('Cannot load the database'));
-      return;
-    }
-
-    const lines = data.trim().split('\n');
-    const students = lines.slice(1).filter((line) => line.trim() !== '');
-    const result = [];
-
-    result.push(`Number of students: ${students.length}`);
-
-    const fields = {};
-    students.forEach((student) => {
-      const [firstname, , , field] = student.split(',');
-      if (!fields[field]) {
-        fields[field] = [];
+function countStudents(path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, 'utf8', (err, data) => {
+      if (err) {
+        reject(new Error('Cannot load the database'));
+        return;
       }
-      fields[field].push(firstname);
-    });
 
-    Object.entries(fields).forEach(([field, names]) => {
-      result.push(`Number of students in ${field}: ${names.length}. List: ${names.join(', ')}`);
-    });
+      const lines = data.split(/\r?\n/).filter((line) => line.trim() !== '');
+      const students = lines.slice(1);
+      const fields = {};
 
-    resolve({ total: students.length, fields, output: result.join('\n') });
+      for (const line of students) {
+        const parts = line.split(',');
+        const firstname = parts[0];
+        const field = parts[3];
+
+        if (!fields[field]) {
+          fields[field] = [];
+        }
+
+        fields[field].push(firstname);
+      }
+
+      let result = `Number of students: ${students.length}`;
+
+      Object.keys(fields).forEach((field) => {
+        result += `\nNumber of students in ${field}: ${fields[field].length}. List: ${fields[field].join(', ')}`;
+      });
+
+      resolve(result);
+    });
   });
-});
+}
 
 const app = express();
 
 app.get('/', (req, res) => {
+  res.type('text/plain');
   res.send('Hello Holberton School!');
 });
 
 app.get('/students', (req, res) => {
-  const databasePath = process.argv[2];
-  countStudents(databasePath)
-    .then(({ output }) => {
-      res.send(`This is the list of our students\n${output}`);
+  const database = process.argv[2];
+
+  countStudents(database)
+    .then((result) => {
+      res.type('text/plain');
+      res.send(`This is the list of our students\n${result}`);
     })
-    .catch((error) => {
-      res.send(`This is the list of our students\n${error.message}`);
-    });
-});
-
-app.get('/students/:major', (req, res) => {
-  const { major } = req.params;
-
-  if (major !== 'CS' && major !== 'SWE') {
-    res.status(500).send('Major parameter must be CS or SWE');
-    return;
-  }
-
-  const databasePath = process.argv[2];
-  countStudents(databasePath)
-    .then(({ fields }) => {
-      const names = fields[major] || [];
-      res.send(`List: ${names.join(', ')}`);
-    })
-    .catch((error) => {
-      res.status(500).send(error.message);
+    .catch((err) => {
+      res.type('text/plain');
+      res.send(`This is the list of our students\n${err.message}`);
     });
 });
 
