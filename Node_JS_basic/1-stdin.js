@@ -3,19 +3,22 @@
 // Display welcome message
 process.stdout.write('Welcome to Holberton School, what is your name?\n');
 
-// Set encoding for stdin to handle input properly
+// Set encoding for stdin
 process.stdin.setEncoding('utf8');
 
-// Read user input
-process.stdin.on('readable', () => {
-  const chunk = process.stdin.read();
-  if (chunk !== null) {
-    // Display the name input by the user
-    process.stdout.write(`Your name is: ${chunk}`);
+// Handle input
+process.stdin.on('data', (data) => {
+  const name = data.trim();
+  process.stdout.write(`Your name is: ${name}\n`);
+  
+  // If stdin is not a TTY (piped input), we need to close immediately
+  if (!process.stdin.isTTY) {
+    process.stdout.write('This important software is now closing\n');
+    process.exit();
   }
 });
 
-// Handle end of input (Ctrl+D or pipe)
+// Handle end of input (Ctrl+D in interactive mode)
 process.stdin.on('end', () => {
   process.stdout.write('This important software is now closing\n');
 });
