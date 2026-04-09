@@ -2,35 +2,47 @@ const fs = require('fs');
 
 function countStudents(path) {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf-8', (err, data) => {
+    fs.readFile(path, 'utf8', (err, data) => {
       if (err) {
-        reject(new Error('Cannot load the database'));
+        reject(Error('Cannot load the database'));
         return;
       }
+      const response = [];
+      let msg;
 
-      const lines = data.split('\n');
-      const rows = lines.slice(1).filter((row) => row.trim() !== '' && row.split(',').length === 4);
+      const content = data.toString().split('\n');
+
+      let students = content.filter((item) => item);
+
+      students = students.map((item) => item.split(','));
+
+      const NUMBER_OF_STUDENTS = students.length ? students.length - 1 : 0;
+      msg = `Number of students: ${NUMBER_OF_STUDENTS}`;
+      console.log(msg);
+
+      response.push(msg);
 
       const fields = {};
-      rows.forEach((row) => {
-        const columns = row.split(',');
-        const firstName = columns[0].trim();
-        const field = columns[3].trim();
+      for (const i in students) {
+        if (i !== 0) {
+          if (!fields[students[i][3]]) fields[students[i][3]] = [];
 
-        if (!fields[field]) {
-          fields[field] = [];
+          fields[students[i][3]].push(students[i][0]);
         }
-        fields[field].push(firstName);
-      });
-
-      const output = [];
-      output.push(`Number of students: ${rows.length}`);
-      for (const [field, students] of Object.entries(fields)) {
-        output.push(`Number of students in ${field}: ${students.length}. List: ${students.join(', ')}`);
       }
 
-      console.log(output.join('\n'));
-      resolve(output.join('\n'));
+      delete fields.field;
+
+      for (const key of Object.keys(fields)) {
+        msg = `Number of students in ${key}: ${
+          fields[key].length
+        }. List: ${fields[key].join(', ')}`;
+
+        console.log(msg);
+
+        response.push(msg);
+      }
+      resolve(response);
     });
   });
 }
